@@ -27,8 +27,7 @@ public class Main {
         public void handle(HttpExchange t) throws IOException {
             InputStream in = t.getRequestBody();
             String s = new String(in.readAllBytes());
-            in.close();
-
+            
             JSONObject body;
             try {
                 JSONParser parser = new JSONParser();
@@ -50,19 +49,21 @@ public class Main {
                 os.flush();
                 os.close();
                 t.sendResponseHeaders(400, response.length());
-                return;
             }
             else {
                 String username = (String) body.get("username");
-                int score = (int) body.get("score");
+                String score = (String) body.get("score");
 
                 try {
                     Connection db = DriverManager.getConnection("jdbc:sqlite:Assets/leaderboard.db");
                     Statement stmt = db.createStatement();
-                    stmt.executeUpdate("if not exists create table leaderboard (username varchar(255), score int)");
-                    stmt.executeUpdate("insert into leaderboard (username, score) values ('" + username + "', " + score + ")");
+                    stmt.executeUpdate("create table if not exists leaderboard (username varchar(255) primary key, score int)");
+                    stmt.executeUpdate("insert into leaderboard (username, score) values ('" + username + "', " + score + ") on conflict(username) do update set score=" + score);
                     stmt.close();
-                    t.sendResponseHeaders(200, 0);
+                    t.sendResponseHeaders(200, "done".length());
+                    OutputStream os = t.getResponseBody();
+                    os.write("done".getBytes());
+                    os.flush(); os.close();
                 } catch (SQLException e) {
                     OutputStream os = t.getResponseBody();
                     String response = e.getMessage() + "\n\n" + e.getStackTrace();
@@ -80,25 +81,12 @@ public class Main {
             InputStream in = t.getRequestBody();
             String s = new String(in.readAllBytes());
 
-            JSONObject body;
-            try {
-                JSONParser parser = new JSONParser();
-                body = (JSONObject) parser.parse(s);
-            } catch (ParseException e) {
-                OutputStream os = t.getResponseBody();
-                String response = "Invalid JSON in request body";
-                t.sendResponseHeaders(400, response.length());
-                os.write(response.getBytes());
-                os.flush(); os.close();
-                return;
-            }
-
             try {
                 Connection db = DriverManager.getConnection("jdbc:sqlite:Assets/leaderboard.db");
                 Statement stmt = db.createStatement();
-                stmt.executeQuery("select * from leaderboard order by desc limit 5");
+                stmt.executeUpdate("create table if not exists leaderboard (username varchar(255) primary key, score int)");
+                ResultSet rs = stmt.executeQuery("select * from leaderboard order by score desc limit 5");
                 StringBuilder sb = new StringBuilder();
-                ResultSet rs = stmt.getResultSet();
                 while (rs.next()) {
                     sb.append(rs.getString("username") + " - " + rs.getInt("score") + "\n");
                 }
