@@ -27,6 +27,8 @@ public class Main {
         public void handle(HttpExchange t) throws IOException {
             InputStream in = t.getRequestBody();
             String s = new String(in.readAllBytes());
+
+            System.out.println("ScoreSubmitter: Got body " + s);
             
             JSONObject body;
             try {
@@ -38,6 +40,8 @@ public class Main {
                 t.sendResponseHeaders(400, response.length());
                 os.write(response.getBytes());
                 os.flush(); os.close();
+
+                System.out.println("ScoreSubmitter: Found invalid JSON in body!");
 
                 return;
             }
