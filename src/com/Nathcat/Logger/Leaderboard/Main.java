@@ -1,5 +1,6 @@
 package com.Nathcat.Logger.Leaderboard;
 
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -12,6 +13,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.sql.*;
+import java.util.Objects;
 
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -25,6 +27,17 @@ public class Main {
     private static class ScoreSubmitter implements HttpHandler {
         @Override
         public void handle(HttpExchange t) throws IOException {
+            if (t.getRequestMethod().contentEquals("OPTIONS")) {
+                Headers h = t.getRequestHeaders();
+                h.add("Connection", "keep-alive");
+                h.add("Access-Control-Allow-Origin", "*");
+                h.add("Access-Control-Allow-Methods", "PUT, OPTIONS");
+                h.add("Access-Control-Allow-Headers", "X-Requested-With");
+                h.add("Access-Control-Max-Age", "86400");
+                t.sendResponseHeaders(204, 0);
+                return;
+            }
+
             InputStream in = t.getRequestBody();
             String s = new String(in.readAllBytes());
 
