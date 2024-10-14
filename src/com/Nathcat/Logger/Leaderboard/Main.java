@@ -28,15 +28,18 @@ public class Main {
         @Override
         public void handle(HttpExchange t) throws IOException {
             if (t.getRequestMethod().contentEquals("OPTIONS")) {
+                System.out.println("ScoreSubmitter: Got CORS preflight responding.");
                 Headers h = t.getRequestHeaders();
                 h.add("Connection", "keep-alive");
                 h.add("Access-Control-Allow-Origin", "*");
                 h.add("Access-Control-Allow-Methods", "PUT, OPTIONS");
-                h.add("Access-Control-Allow-Headers", "X-Requested-With");
+                h.add("Access-Control-Allow-Headers", "Content-Type");
                 h.add("Access-Control-Max-Age", "86400");
-                t.sendResponseHeaders(204, 0);
+                t.sendResponseHeaders(204, -1);
                 return;
             }
+
+            t.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
 
             InputStream in = t.getRequestBody();
             String s = new String(in.readAllBytes());
