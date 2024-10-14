@@ -27,15 +27,16 @@ public class Main {
     private static class ScoreSubmitter implements HttpHandler {
         @Override
         public void handle(HttpExchange t) throws IOException {
+            System.out.println(t.getRequestMethod());
             if (t.getRequestMethod().contentEquals("OPTIONS")) {
                 System.out.println("ScoreSubmitter: Got CORS preflight responding.");
-                Headers h = t.getRequestHeaders();
-                h.add("Connection", "keep-alive");
+                Headers h = t.getResponseHeaders();
                 h.add("Access-Control-Allow-Origin", "*");
-                h.add("Access-Control-Allow-Methods", "PUT, OPTIONS");
-                h.add("Access-Control-Allow-Headers", "Content-Type");
+                h.add("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS");
+                h.add("Access-Control-Allow-Credentials", "true");
+                h.add("Access-Control-Allow-Headers", "Accept, Content-Type, X-Access-Token, X-Application-Name, X-Request-Sent-Time");
                 h.add("Access-Control-Max-Age", "86400");
-                t.sendResponseHeaders(204, -1);
+                t.sendResponseHeaders(200, -1);
                 return;
             }
 
@@ -100,6 +101,8 @@ public class Main {
         public void handle(HttpExchange t) throws IOException {
             InputStream in = t.getRequestBody();
             String s = new String(in.readAllBytes());
+
+            t.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
 
             try {
                 Connection db = DriverManager.getConnection("jdbc:sqlite:Assets/leaderboard.db");
