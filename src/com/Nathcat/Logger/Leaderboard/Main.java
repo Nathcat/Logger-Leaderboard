@@ -86,12 +86,12 @@ public class Main {
                     pstmt.setInt(3, Integer.parseInt(score));
                     pstmt.executeUpdate();
                     pstmt.close();
-                    
+
                     t.sendResponseHeaders(200, "done".length());
                     OutputStream os = t.getResponseBody();
                     os.write("done".getBytes());
                     os.flush(); os.close();
-                } catch (SQLException e) {
+                } catch (Exception e) {
                     OutputStream os = t.getResponseBody();
                     String response = e.getMessage() + "\n\n" + e.getStackTrace();
                     t.sendResponseHeaders(500, response.length());
