@@ -79,8 +79,14 @@ public class Main {
                     Connection db = DriverManager.getConnection("jdbc:sqlite:Assets/leaderboard.db");
                     Statement stmt = db.createStatement();
                     stmt.executeUpdate("create table if not exists leaderboard (username varchar(255) primary key, score int)");
-                    stmt.executeUpdate("insert into leaderboard (username, score) values ('" + username + "', " + score + ") on conflict(username) do update set score=" + score);
                     stmt.close();
+                    PreparedStatement pstmt = db.prepareStatement("insert into leaderboard (username, score) values (?, ?) on conflict(username) do update set score= ? ");
+                    pstmt.setString(1, username);
+                    pstmt.setInt(2, Integer.parseInt(score));
+                    pstmt.setInt(3, Integer.parseInt(score));
+                    pstmt.executeUpdate();
+                    pstmt.close();
+                    
                     t.sendResponseHeaders(200, "done".length());
                     OutputStream os = t.getResponseBody();
                     os.write("done".getBytes());
